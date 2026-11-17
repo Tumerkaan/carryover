@@ -1,0 +1,6 @@
+[mcp_servers.tiles-db]
+command = "uvx"
+args = ["mcp-server-sqlite", "--db-path", "data/tiles.db"]
+env_vars = ["TILES_DB_KEY"]
+enabled_tools = ["read_query", "list_tables"]
+startup_timeout_sec = 20

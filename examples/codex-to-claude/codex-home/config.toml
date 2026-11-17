@@ -1,0 +1,15 @@
+# Synthetic user-level Codex config (fictional)
+model = "gpt-5-codex"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+notify = ["powershell", "-File", "C:/tools/notify.ps1"]
+
+[mcp_servers.docs]
+url = "https://mcp.example.com/docs"
+bearer_token_env_var = "DOCS_MCP_TOKEN"
+
+[plugins."github@openai-curated"]
+enabled = true
+
+[projects.'/work/tilecache']
+trust_level = "trusted"

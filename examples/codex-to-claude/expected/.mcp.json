@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "tiles-db": {
+      "command": "uvx",
+      "args": ["mcp-server-sqlite", "--db-path", "data/tiles.db"],
+      "env": { "TILES_DB_KEY": "${TILES_DB_KEY}" }
+    },
+    "docs": {
+      "type": "http",
+      "url": "https://mcp.example.com/docs",
+      "headers": { "Authorization": "Bearer ${DOCS_MCP_TOKEN}" }
+    }
+  }
+}

@@ -1,0 +1,2 @@
+{"timestamp": "2026-03-05T09:00:00Z", "type": "session_meta", "payload": {"id": "other", "cwd": "/work/another-project", "cli_version": "0.160.0", "originator": "codex_cli"}}
+{"timestamp": "2026-03-05T09:01:00Z", "type": "response_item", "payload": {"type": "message", "role": "user", "content": [{"type": "input_text", "text": "OTHER_PROJECT_SHOULD_NOT_APPEAR"}]}}

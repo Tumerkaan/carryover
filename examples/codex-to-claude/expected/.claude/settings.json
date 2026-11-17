@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": ["Bash(git status:*)", "Bash(pytest:*)", "mcp__tiles-db__read_query", "mcp__tiles-db__list_tables"],
+    "ask": ["Bash(git push:*)"],
+    "deny": ["Bash(rm -rf:*)"]
+  },
+  "hooks": {
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "powershell -File C:/tools/notify.ps1" } ] }
+    ]
+  }
+}
