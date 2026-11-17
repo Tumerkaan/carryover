@@ -47,7 +47,7 @@ Mimari yıldız şeklinde. Her araç ortak `carryover/` paketine okur ve oradan 
 ### Kurulum
 
 ```bash
-git clone <repo-url> carryover
+git clone https://github.com/Tumerkaan/carryover.git
 # Claude Code (kullanıcı geneli)
 cp -r carryover/skills/carryover ~/.claude/skills/
 # Codex (kullanıcı geneli)
@@ -124,7 +124,7 @@ The design is hub-and-spoke: every tool reads from and writes to the same tool-n
 ### Install
 
 ```bash
-git clone <repo-url> carryover
+git clone https://github.com/Tumerkaan/carryover.git
 cp -r carryover/skills/carryover ~/.claude/skills/   # Claude Code
 cp -r carryover/skills/carryover ~/.codex/skills/    # Codex
 ```
