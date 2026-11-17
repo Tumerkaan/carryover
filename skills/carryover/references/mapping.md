@@ -47,7 +47,8 @@ Status words match the final report: `Carried`, `Check before using`, `Not carri
 | PreToolUse / PostToolUse | all tools, matcher by tool name | shell commands only | Check | Carried; matcher becomes `Bash` | O |
 | UserPromptSubmit, SessionStart, Stop | yes | yes (fewer matchers) | Check | Carried | O |
 | Notification, PreCompact, SubagentStop, SessionEnd, ... | yes | no | Not carried | n/a | O |
-| `notify` (turn complete) | `Stop` / `Notification` hook | `notify = [...]` in config | n/a | Carried as `Stop` hook | O/U |
+| `notify` (turn complete) | `Stop` / `Notification` hook | `notify = [...]` in config | n/a | Carried as `Stop` hook only if the program is the user's own script; if it is part of the Codex app (a path under the Codex install, e.g. its computer-use helper), Not carried | O/U |
+| Automations, goals (scheduled or self-continuing agent loops) | scheduled tasks / `/loop` (not a settings file) | Codex app automations and goals | Not carried | Not carried: list each with its schedule and prompt, so the user can recreate it by hand | U |
 | Hook types | `command`, `prompt`, `agent`, `http` | `command` only | prompt/agent/http: Not carried | Carried | O |
 
 ## Agents, commands, skills, plugins

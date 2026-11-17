@@ -27,8 +27,8 @@ Work autonomously. Ask the user only at the two points marked **ASK** below.
 
 ### 1. Identify
 - Source tool, destination tool, project root (absolute path). If the user did not say which tool they came from, check which adapters' discovery steps find data for this project.
-- **Old paths:** ask (or infer from the source tool's session list) whether the project lived at other paths before: renamed or moved folders, other machines, worktrees. Sessions are matched by working directory, so pass every old path to the extractor (`--project` can be repeated).
-- **Language:** write the bundle in the language the user writes to you in; keep code, paths and quoted errors as they are.
+- **Old paths:** ask (or infer from the source tool's session list) whether the project lived at other paths before: renamed or moved folders, other machines, worktrees (`git -C <project> worktree list` shows worktrees that live outside the project folder). Sessions are matched by working directory, so pass every old path to the extractor (`--project` can be repeated).
+- **Language:** write the bundle in the language the user writes to you in: headings, entries and field labels (`When`, `What`, `Why`, ...). Keep file names, status words (`Carried`, ...), item types and code, paths and quoted errors in English / as they are.
 - Open `adapters/<source>.md` and `adapters/<destination>.md`. If an adapter is missing, use `adapters/_template.md` and fill it by discovery; mark everything you learn this way as `unverified` in the report.
 
 ### 2. Inventory (read only)
@@ -48,20 +48,21 @@ Using the source adapter, list what exists **for this project** (project-scoped 
    python <this skill's folder>/scripts/extract_history.py --tool <claude|codex> --project "<project root>" --stats
    python <this skill's folder>/scripts/extract_history.py --tool <claude|codex> --project "<project root>" [--project "<old path>" ...] --out "<temp dir>/digest.md"
    ```
-   - Write the digest to a **temporary directory outside the project** (e.g. the system temp folder), not into the repo.
+   - Write the digest to a **temporary directory outside the project** (e.g. the system temp folder), not into the repo. If writing there is refused, use a folder you may write that git does not track (e.g. `<project>/.carryover-digest/`, listed in `.git/info/exclude`), and delete it in step 4.
+   - Keep your draft notes in a file next to the digest (e.g. `notes.md`) and update it after every part, so the work survives a full context.
    - `--stats` prints counts and one line per session (id, date range, first user message). Check that each session really belongs to this project; leave out misfiled ones with `--exclude-session <id>`.
-   - A large history is written as numbered parts (`digest-01.md`, `digest-02.md`, ...), each ≤ `--max-chars` (default 200k). Nothing is dropped. Read every part in order, distilling as you go: after each part, update draft notes (decisions / lessons / dead ends / open threads) and then move on. `open-threads.md` depends on the last part.
-   - Message labels: `USER`, `AGENT` (answer to the user), `AUTO` (agent turn with no user message: goal or automation loops), `SUMMARY` (compaction). AUTO messages are usually progress reports; skim them, and if they dominate, rerun with `--drop-auto`. Times are UTC; each day has a `### YYYY-MM-DD` heading.
+   - A large history is written as numbered parts (`digest-01.md`, `digest-02.md`, ...), each ≤ `--max-chars` (default 200k). Nothing is dropped. Read every part in order, distilling as you go: after each part, update draft notes (decisions / lessons / dead ends / open threads) and then move on. `open-threads.md` depends on the last part. If a part is too large to read in one go, rerun with a smaller `--max-chars` (e.g. `100000`) to get more, smaller parts; lower `--per-message` only after that, since it cuts messages.
+   - Message labels: `USER`, `AGENT` (answer to the user), `AUTO` (agent turn with no user message: goal or automation loops), `SUMMARY` (compaction). AUTO messages are usually progress reports; skim them. If they are more than half of the messages (`--stats` prints the counts), distill with `--drop-auto`, then extract the last 7 active days again **with** AUTO (`--since <date>`): autonomous loops often hold the latest state, which `open-threads.md` needs. Times are UTC; each day has a `### YYYY-MM-DD` heading.
    - Other options: `--home` (source data dir), `--since` / `--until YYYY-MM-DD`, `--per-message` (default 2000 chars).
-   - The digest keeps only conversation text. Tool output, reasoning, system/developer text, injected app context, duplicates and subagent threads are dropped; keys, tokens and e-mail addresses are masked. For a tool the script does not support, read the transcripts directly following the adapter's format notes.
+   - The digest keeps only conversation text. Tool output, reasoning, system/developer text, injected app context, duplicates and subagent threads are dropped; keys, tokens, e-mail addresses, the account name in home-directory paths and the names in the project's git log are masked. Mask other people's names with `--mask "<name>"` (repeatable). For a tool the script does not support, read the transcripts directly following the adapter's format notes.
 3. Read the digest and write the bundle files (`references/bundle-format.md`), starting with `carryover/README.md` (source, destination, date, scope, history range):
    - `decisions.md` — what was decided and **why** (one entry per decision, with date and source).
    - `lessons.md` — things that bit you: env quirks, commands that fail, conventions the user corrected.
    - `tried-and-dropped.md` — approaches abandoned and the reason. This is the most valuable file; be specific.
    - `open-threads.md` — unfinished work, known bugs, next steps as of the last session.
    Quality bar: each entry must be something a new agent would otherwise get wrong. Drop chit-chat. Drop what a new agent will see anyway: code, git history, and **tracked** docs. Docs that exist on disk but are gitignored or untracked (local reports, roadmaps) do not travel with the repo: an entry may summarize them and should name the file. Cite the session date for each entry.
-   Privacy: if the repo is public, keep personal details (names, e-mails, school/employer internals) out of the bundle, or ask the user whether `carryover/` should be gitignored.
-4. Delete the digest files after use (they are raw-ish).
+   Privacy: if the repo is public, keep personal details (names, e-mails, school/employer internals) out of the bundle, or ask the user whether `carryover/` should be gitignored. Refer to people by role ("the user", "the course instructor"). If `--stats` or the digest shows names the extractor did not mask, rerun with `--mask` for each.
+4. Delete the digest files and draft notes after use (they are raw-ish).
 
 ### 4. Inventory settings
 Write `carryover/settings-inventory.md`: one row per setting in tool-neutral terms (see bundle format). Values that are secrets → name only.
@@ -72,13 +73,13 @@ Use `references/mapping.md` and the destination adapter. For each inventory row:
 - Partial equivalent (semantics change, behavior preserved as prompt text) → write it, status `Check before using`, note what differs.
 - No equivalent → do not invent one. Status `Not carried`, note why and what the user can do by hand.
 
-Instructions: the project's instruction file (`AGENTS.md`, `CLAUDE.md`) belongs to the repo, not to the source tool, so you may edit it, but do not delete it. Default route: write the destination's file as a merged copy and rewrite tool-specific references (paths like `.claude/` or `.codex/`, tool names, slash commands, "Codex: ..." / "Claude: ..." lines) for the destination. Use an import line instead (e.g. `@AGENTS.md` in `CLAUDE.md`) only if the user wants one shared file kept for both tools; then move tool-specific lines into the tool's own file. Then append a short `## Project history (carried over)` section that **links** to `carryover/decisions.md`, `lessons.md`, `tried-and-dropped.md`, `open-threads.md` and inlines only the 5–10 most important lines. Keep the instruction file short.
+Instructions: the project's instruction file (`AGENTS.md`, `CLAUDE.md`) belongs to the repo, not to the source tool, so you may edit it, but do not delete it. Default route: write the destination's file as a merged copy and rewrite tool-specific references (paths like `.claude/` or `.codex/`, tool names, slash commands, "Codex: ..." / "Claude: ..." lines) for the destination. Use an import line instead (e.g. `@AGENTS.md` in `CLAUDE.md`) only if the user wants one shared file kept for both tools; then move tool-specific lines into the tool's own file. If the source has no instruction file, create the destination's file with only what a new agent needs and cannot see in tracked docs (one or two lines on what the project is, if the README does not say it), then the history section below. Then append a short `## Project history (carried over)` section that **links** to `carryover/decisions.md`, `lessons.md`, `tried-and-dropped.md`, `open-threads.md` and inlines only the 5–10 most important lines. Keep the instruction file short.
 
 Tool allowlists (e.g. Codex `enabled_tools`) have no direct form in Claude Code: list the server's real tools (start the server, or ask the user), then allow the listed ones and deny the rest by name. If you cannot list them, carry only the allow rules and mark the row `Check before using`.
 
 **ASK** before overwriting an existing destination file that the user wrote by hand (show the diff summary). Creating new files needs no question.
 
-**Blocked writes:** if a hook, permission rule or sandbox refuses a destination write, do not work around it (no writing through the shell instead). Write the content to `carryover/<target-file-name>.proposed` (e.g. `carryover/settings.json.proposed`), and report the row as `Check before using` with the note "not written: <reason>; proposed in carryover/...". If **every** write is refused, stop writing, put the bundle content in your reply to the user, and say which permission is missing.
+**Blocked writes:** if a hook, permission rule or sandbox refuses a destination write, do not work around it (no writing through the shell instead). Write the content to `carryover/<target-file-name>.proposed` (e.g. `carryover/settings.json.proposed`), and report the row as `Check before using` with the note "not written: <reason>; proposed in carryover/...". If the `.proposed` file is refused too, or **every** write is refused, stop writing, put the bundle content in your reply to the user, and say which permission is missing. If the bundle does not fit in one reply, send it in this order and say what was left out: `open-threads`, `tried-and-dropped`, `decisions`, `lessons`, then the report table.
 
 ### 6. Verify
 - Parse every config you wrote (JSON / TOML must load).
@@ -97,9 +98,9 @@ End with exactly one table, then at most three lines of follow-up:
 
 Save the same table as `carryover/report.md`. One row per item; if an item has two caveats (e.g. mapping unverified *and* not written), put both in Notes separated by `;`, and use the stricter status.
 
-Item type is one of: `Instructions`, `History`, `Memory`, `MCP`, `Hook`, `Permission`, `Sandbox`, `Env`, `Subagent`, `Command`, `Skill`, `Plugin`, `Setting`.
+Item type is one of: `Instructions`, `History`, `Memory`, `MCP`, `Hook`, `Permission`, `Sandbox`, `Env`, `Subagent`, `Command`, `Skill`, `Plugin`, `Automation` (scheduled or self-continuing agent loops, e.g. Codex automations and goals), `Setting`.
 
-User-level skills and plugins the history shows were used heavily on this project are not dependencies, but a new agent will miss them: list them as `Not carried` with "used often in this project; install the destination equivalent if one exists".
+User-level skills and plugins the history shows were used heavily on this project are not dependencies, but a new agent will miss them: list them as `Not carried` with "used often in this project; install the destination equivalent if one exists". The digest has no tool calls, so the evidence is the user naming the skill or plugin in their messages (`$name`, `@name`, "use X"), or usage records if the source adapter lists them; give the count in Notes. Without such evidence, leave them out.
 
 ## Fallback (no skill system)
 

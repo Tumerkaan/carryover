@@ -49,4 +49,4 @@ One table. Values are tool-neutral; secrets by name only.
 | Command | /release | project | `.claude/commands/release.md` | prompt template with `$ARGUMENTS` | — |
 | Skill | pdf-tools | user | `~/.claude/skills/pdf-tools/` | skill folder | — |
 
-`Kind` is one of: `MCP`, `Hook`, `Permission`, `Sandbox`, `Subagent`, `Command`, `Skill`, `Plugin`, `Setting`, `Env`.
+`Kind` is one of: `MCP`, `Hook`, `Permission`, `Sandbox`, `Subagent`, `Command`, `Skill`, `Plugin`, `Automation`, `Setting`, `Env`. Kinds, file names and status words stay in English; headings and field labels follow the bundle language.

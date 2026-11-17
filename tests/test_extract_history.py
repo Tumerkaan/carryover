@@ -203,6 +203,48 @@ class Limits(unittest.TestCase):
         self.assertIn("[REDACTED]", eh.redact("Authorization: Bearer abcdefghijklmnop"))
         self.assertEqual(eh.redact("tokens used: 1234"), "tokens used: 1234")
 
+    def test_parts_never_exceed_max_chars(self):
+        msgs = [eh.Msg("s", f"2026-01-{1 + i % 28:02d}T10:00:00Z", "user", "öğün " * 300) for i in range(60)]
+        parts = eh.render_parts(msgs, "codex", PROJECT, 2000, 10_000)
+        self.assertGreater(len(parts), 5)
+        for p in parts:
+            self.assertLessEqual(len(p), 10_000)
+            self.assertIn("## session s", p)  # each part says which session it continues
+
+    def test_home_dir_user_masked(self):
+        self.assertEqual(eh.redact(r"C:\Users\alice\proj"), r"C:\Users\<user>\proj")
+        self.assertEqual(eh.redact("/home/bob/x and /Users/carol/y"), "/home/<user>/x and /Users/<user>/y")
+
+
+class LongTokensAndNames(unittest.TestCase):
+    def tearDown(self):
+        eh.set_masks([])
+
+    def test_url_query_cut_address_kept(self):
+        url = "https://help.example.com/hc/articles/123-reset-password?" + "q=" + "a" * 400
+        out = eh._body("see " + url, 2000)
+        self.assertIn("https://help.example.com/hc/articles/123-reset-password?[...query cut]", out)
+
+    def test_url_in_markdown_link_kept(self):
+        url = "https://help.example.com/hc/en/articles/" + "-".join(["slug"] * 40) + "?x=" + "b" * 80
+        out = eh._body(f"[Help]({url})", 2000)
+        self.assertIn("[Help](https://help.example.com/hc/en/articles/slug-", out)
+        self.assertNotIn("long token cut", out)
+
+    def test_blob_still_cut(self):
+        out = eh._body("data:" + "A" * 500, 2000)
+        self.assertIn("[...long token cut]", out)
+
+    def test_names_masked(self):
+        used = eh.set_masks(["Ayşe Yılmaz", "dependabot[bot]", "Claude", "jdoe"])
+        self.assertEqual(used, ["Ayşe Yılmaz", "jdoe"])
+        self.assertEqual(eh.redact("Ayşe Yılmaz, Yılmaz hoca, JDOE ve Ayşe"), "[NAME], [NAME] hoca, [NAME] ve [NAME]")
+        self.assertEqual(eh.redact("Claude yazdı; yılmaz değil"), "Claude yazdı; yılmaz değil")
+
+    def test_git_authors_of_non_repo_is_empty(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertEqual(eh.git_authors([d, os.path.join(d, "missing")]), [])
+
 
 if __name__ == "__main__":
     unittest.main()
