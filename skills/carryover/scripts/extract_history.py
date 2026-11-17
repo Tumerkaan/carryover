@@ -79,6 +79,11 @@ def clean(text: str) -> str:
 
 def norm_path(p: str) -> str:
     p = p.replace("\\", "/").rstrip("/")
+    # Windows extended-length prefix, stored by Codex Desktop: \\?\C:\... or \\?\UNC\...
+    if p.startswith("//?/"):
+        p = p[4:]
+        if p.lower().startswith("unc/"):
+            p = "//" + p[4:]
     if os.name == "nt" or re.match(r"^[A-Za-z]:/", p):
         p = p.lower()
     return p

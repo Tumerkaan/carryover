@@ -156,6 +156,11 @@ class Limits(unittest.TestCase):
         _, text = digest("codex", CODEX_HOME, per_msg=20)
         self.assertIn("[...]", text)
 
+    def test_windows_extended_prefix(self):
+        self.assertTrue(eh.in_project(r"\\?\C:\Users\x\Proje Ğ\src", r"C:\Users\x\Proje Ğ"))
+        self.assertTrue(eh.in_project(r"C:\Users\x\proj", r"\\?\C:\Users\x\proj"))
+        self.assertFalse(eh.in_project(r"\\?\C:\Users\x\proj2", r"C:\Users\x\proj"))
+
     def test_redact_patterns(self):
         self.assertEqual(eh.redact("password=hunter2xyz"), "password=[REDACTED]")
         self.assertIn("[REDACTED]", eh.redact("Authorization: Bearer abcdefghijklmnop"))
