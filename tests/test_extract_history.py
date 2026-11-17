@@ -117,17 +117,20 @@ class CodexSqlite(unittest.TestCase):
 
         base = 1772445600000  # 2026-03-02
         rows = [
-            ("t-main", 1, user("<heartbeat>\n<automation>INJECTED_HEARTBEAT</automation>\n</heartbeat>"), "userMessage"),
-            ("t-main", 2, user("# In app browser:\n- INJECTED_BROWSER\n\n## My request for Codex:\nCache'i Parquet'e çevir."), "userMessage"),
-            ("t-main", 3, agent("COMMENTARY_SHOULD_NOT_APPEAR", "commentary"), "agentMessage"),
-            ("t-main", 4, json.dumps({"type": "commandExecution", "command": "TOOL_SHOULD_NOT_APPEAR"}), "commandExecution"),
-            ("t-main", 5, agent("Parquet'e geçildi; SQLite kilitlendiği için bırakıldı."), "agentMessage"),
-            ("t-sub", 1, user("SUBAGENT_SHOULD_NOT_APPEAR"), "userMessage"),
-            ("t-child", 1, user("CHILD_SHOULD_NOT_APPEAR"), "userMessage"),
-            ("t-other", 1, user("OTHER_SHOULD_NOT_APPEAR"), "userMessage"),
+            ("t-main", "hb", 1, user("<heartbeat>\n<automation>INJECTED_HEARTBEAT</automation>\n</heartbeat>"), "userMessage"),
+            ("t-main", "hb", 2, agent("HEARTBEAT_REPLY_SHOULD_NOT_APPEAR"), "agentMessage"),
+            ("t-main", "u1", 3, user("# In app browser:\n- INJECTED_BROWSER\n\n## My request for Codex:\nCache'i Parquet'e çevir."), "userMessage"),
+            ("t-main", "u1", 4, user("# In app browser:\n- INJECTED_BROWSER\n\n## My request for Codex:\nCache'i Parquet'e çevir."), "userMessage"),
+            ("t-main", "u1", 5, agent("COMMENTARY_SHOULD_NOT_APPEAR", "commentary"), "agentMessage"),
+            ("t-main", "u1", 6, json.dumps({"type": "commandExecution", "command": "TOOL_SHOULD_NOT_APPEAR"}), "commandExecution"),
+            ("t-main", "u1", 7, agent("Parquet'e geçildi; SQLite kilitlendiği için bırakıldı. Sorular: dev@example.com\n# Başlık"), "agentMessage"),
+            ("t-main", "loop", 8, agent("Otonom tur: sprint 12 bitti."), "agentMessage"),
+            ("t-sub", "s", 1, user("SUBAGENT_SHOULD_NOT_APPEAR"), "userMessage"),
+            ("t-child", "c", 1, user("CHILD_SHOULD_NOT_APPEAR"), "userMessage"),
+            ("t-other", "o", 1, user("OTHER_SHOULD_NOT_APPEAR"), "userMessage"),
         ]
         h.executemany("insert into thread_items values (?,?,?,?,?,?,?)",
-                      [(t, "turn", f"{t}-{o}", o, base + o * 1000, j, ty) for t, o, j, ty in rows])
+                      [(t, turn, f"{t}-{o}", o, base + o * 1000, j, ty) for t, turn, o, j, ty in rows])
         h.commit(); h.close()
         self.msgs, self.text = digest("codex", home)
 
@@ -140,8 +143,25 @@ class CodexSqlite(unittest.TestCase):
         self.assertIn("SQLite kilitlendiği", self.text)
 
     def test_drops_noise(self):
-        for marker in ("INJECTED", "COMMENTARY", "TOOL_SHOULD", "SUBAGENT", "CHILD", "OTHER_SHOULD"):
+        for marker in ("INJECTED", "COMMENTARY", "TOOL_SHOULD", "SUBAGENT", "CHILD", "OTHER_SHOULD", "HEARTBEAT_REPLY"):
             self.assertNotIn(marker, self.text, marker)
+
+    def test_duplicate_dropped_email_masked_heading_escaped(self):
+        self.assertEqual(self.text.count("Cache'i Parquet'e çevir."), 1)
+        self.assertNotIn("dev@example.com", self.text)
+        self.assertIn("[EMAIL]", self.text)
+        self.assertIn("\\# Başlık", self.text)
+
+    def test_agent_turn_without_user_is_auto(self):
+        roles = {m.text: m.role for m in self.msgs}
+        self.assertEqual(roles["Otonom tur: sprint 12 bitti."], "auto")
+        self.assertIn("**AUTO**", self.text)
+        dropped = eh.collect("codex", self.tmp.name, PROJECT, None, None, None, True)
+        self.assertNotIn("auto", {m.role for m in dropped})
+
+    def test_exclude_session(self):
+        msgs = eh.collect("codex", self.tmp.name, PROJECT, None, None, ["t-main"])
+        self.assertEqual(msgs, [])
 
     def test_timestamp(self):
         self.assertTrue(self.msgs[0].timestamp.startswith("2026-03-02"))
@@ -151,6 +171,23 @@ class Limits(unittest.TestCase):
     def test_max_chars_truncates(self):
         _, text = digest("codex", CODEX_HOME, max_chars=500)
         self.assertIn("TRUNCATED", text)
+
+    def test_parts_cover_everything(self):
+        msgs, _ = digest("codex", CODEX_HOME)
+        parts = eh.render_parts(msgs, "codex", PROJECT, 2000, 600)
+        self.assertGreater(len(parts), 1)
+        joined = "".join(parts)
+        for m in msgs:
+            self.assertIn(eh._body(m.text, 2000)[:30], joined)
+        self.assertIn("part 1 of", parts[0])
+        self.assertIn("### 2026-03-09", joined)
+
+    def test_out_writes_numbered_parts(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = os.path.join(d, "dig.md")
+            eh.main(["--tool", "codex", "--home", CODEX_HOME, "--project", PROJECT, "--max-chars", "600", "--out", out])
+            self.assertTrue(os.path.exists(os.path.join(d, "dig-01.md")))
+            self.assertTrue(os.path.exists(os.path.join(d, "dig-02.md")))
 
     def test_per_message_cap(self):
         _, text = digest("codex", CODEX_HOME, per_msg=20)

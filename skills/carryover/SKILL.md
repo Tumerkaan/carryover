@@ -46,16 +46,22 @@ Using the source adapter, list what exists **for this project** (project-scoped 
 2. Run the extractor to get a compact, redacted digest of the conversations:
    ```
    python <this skill's folder>/scripts/extract_history.py --tool <claude|codex> --project "<project root>" --stats
-   python <this skill's folder>/scripts/extract_history.py --tool <claude|codex> --project "<project root>" [--project "<old path>" ...] --out carryover/.digest.md
+   python <this skill's folder>/scripts/extract_history.py --tool <claude|codex> --project "<project root>" [--project "<old path>" ...] --out "<temp dir>/digest.md"
    ```
-   `--stats` prints counts only; use it first to see how much history exists. `--home` overrides the source tool's data directory, `--since` / `--until YYYY-MM-DD` limit the range and `--max-chars` (default 200k) caps the output. The whole `--stats` date range must be covered before you write `open-threads.md` (it depends on the newest sessions). If the digest ends with `TRUNCATED`, process it in date windows (`--since` + `--until`), distilling each window before reading the next. The digest keeps only user and assistant text plus compaction summaries. Tool output, reasoning, system/developer text, injected app context and subagent threads are dropped. For a tool the script does not support, read the transcripts directly following the adapter's format notes.
-3. Read the digest and write the bundle files (`references/bundle-format.md`):
+   - Write the digest to a **temporary directory outside the project** (e.g. the system temp folder), not into the repo.
+   - `--stats` prints counts and one line per session (id, date range, first user message). Check that each session really belongs to this project; leave out misfiled ones with `--exclude-session <id>`.
+   - A large history is written as numbered parts (`digest-01.md`, `digest-02.md`, ...), each ≤ `--max-chars` (default 200k). Nothing is dropped. Read every part in order, distilling as you go: after each part, update draft notes (decisions / lessons / dead ends / open threads) and then move on. `open-threads.md` depends on the last part.
+   - Message labels: `USER`, `AGENT` (answer to the user), `AUTO` (agent turn with no user message: goal or automation loops), `SUMMARY` (compaction). AUTO messages are usually progress reports; skim them, and if they dominate, rerun with `--drop-auto`. Times are UTC; each day has a `### YYYY-MM-DD` heading.
+   - Other options: `--home` (source data dir), `--since` / `--until YYYY-MM-DD`, `--per-message` (default 2000 chars).
+   - The digest keeps only conversation text. Tool output, reasoning, system/developer text, injected app context, duplicates and subagent threads are dropped; keys, tokens and e-mail addresses are masked. For a tool the script does not support, read the transcripts directly following the adapter's format notes.
+3. Read the digest and write the bundle files (`references/bundle-format.md`), starting with `carryover/README.md` (source, destination, date, scope, history range):
    - `decisions.md` — what was decided and **why** (one entry per decision, with date and source).
    - `lessons.md` — things that bit you: env quirks, commands that fail, conventions the user corrected.
    - `tried-and-dropped.md` — approaches abandoned and the reason. This is the most valuable file; be specific.
    - `open-threads.md` — unfinished work, known bugs, next steps as of the last session.
-   Quality bar: each entry must be something a new agent would otherwise get wrong. Drop chit-chat, drop anything already visible in code or git history. Cite the session date for each entry.
-4. Delete `carryover/.digest.md` after use (it is raw-ish). Add `carryover/.digest.md` to `.gitignore` if the project is a git repo.
+   Quality bar: each entry must be something a new agent would otherwise get wrong. Drop chit-chat. Drop what a new agent will see anyway: code, git history, and **tracked** docs. Docs that exist on disk but are gitignored or untracked (local reports, roadmaps) do not travel with the repo: an entry may summarize them and should name the file. Cite the session date for each entry.
+   Privacy: if the repo is public, keep personal details (names, e-mails, school/employer internals) out of the bundle, or ask the user whether `carryover/` should be gitignored.
+4. Delete the digest files after use (they are raw-ish).
 
 ### 4. Inventory settings
 Write `carryover/settings-inventory.md`: one row per setting in tool-neutral terms (see bundle format). Values that are secrets → name only.
@@ -72,7 +78,7 @@ Tool allowlists (e.g. Codex `enabled_tools`) have no direct form in Claude Code:
 
 **ASK** before overwriting an existing destination file that the user wrote by hand (show the diff summary). Creating new files needs no question.
 
-**Blocked writes:** if a hook, permission rule or sandbox refuses a destination write, do not work around it. Write the content to `carryover/<target-file-name>.proposed` (e.g. `carryover/settings.json.proposed`), and report the row as `Check before using` with the note "not written: <reason>; proposed in carryover/...".
+**Blocked writes:** if a hook, permission rule or sandbox refuses a destination write, do not work around it (no writing through the shell instead). Write the content to `carryover/<target-file-name>.proposed` (e.g. `carryover/settings.json.proposed`), and report the row as `Check before using` with the note "not written: <reason>; proposed in carryover/...". If **every** write is refused, stop writing, put the bundle content in your reply to the user, and say which permission is missing.
 
 ### 6. Verify
 - Parse every config you wrote (JSON / TOML must load).
@@ -91,7 +97,9 @@ End with exactly one table, then at most three lines of follow-up:
 
 Save the same table as `carryover/report.md`. One row per item; if an item has two caveats (e.g. mapping unverified *and* not written), put both in Notes separated by `;`, and use the stricter status.
 
-Item type is one of: `Instructions`, `History`, `Memory`, `MCP`, `Hook`, `Permission`, `Subagent`, `Command`, `Skill`, `Plugin`, `Setting`.
+Item type is one of: `Instructions`, `History`, `Memory`, `MCP`, `Hook`, `Permission`, `Sandbox`, `Env`, `Subagent`, `Command`, `Skill`, `Plugin`, `Setting`.
+
+User-level skills and plugins the history shows were used heavily on this project are not dependencies, but a new agent will miss them: list them as `Not carried` with "used often in this project; install the destination equivalent if one exists".
 
 ## Fallback (no skill system)
 

@@ -40,6 +40,7 @@ Never read `~/.codex/auth.json`.
 - `thread_items` (`thread_id`, `rollout_ordinal`, `created_at_ms`, `item_type`, `item_json`):
   - `userMessage`: `content[]` items `{type: "text", text}`. The app wraps context around what the user typed: `<heartbeat>` automation pings (dropped), `# In app browser:` / `# Selected text:` / `# Files mentioned by the user:` followed by `## My request for Codex:` (only the text after that heading is kept), `<in-app-browser-context>` and similar tags (stripped).
   - `agentMessage`: `{text, phase}`, where `phase` is `commentary` (progress chatter, dropped) or `final_answer` (kept).
+  - Turns with agent messages but no `userMessage` are autonomous loops (goals, automations). On the project checked, about two thirds of turns were like this. The extractor labels their answers `AUTO` (`--drop-auto` leaves them out).
   - Everything else (`commandExecution`, `reasoning`, `fileChange`, `mcpToolCall`, `webSearch`, `contextCompaction` (no text), ...) is dropped.
 
 ## Transcript format: rollout JSONL

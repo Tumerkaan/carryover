@@ -24,7 +24,8 @@ class ExpectedFiles(unittest.TestCase):
     def test_no_secret_values_in_expected(self):
         for dirpath, _, files in os.walk(os.path.join(EX, "expected")):
             for f in files:
-                text = open(os.path.join(dirpath, f), encoding="utf-8").read()
+                with open(os.path.join(dirpath, f), encoding="utf-8") as fh:
+                    text = fh.read()
                 self.assertNotIn("ghp_", text, f)
                 self.assertNotIn("sk-", text, f)
 
