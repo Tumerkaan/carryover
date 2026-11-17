@@ -31,6 +31,8 @@ One `##` heading per entry, newest first.
 
 Rules:
 - Every entry has a date and a source tool. No date in the history → write `When: unknown`.
+- Entries describe the state as of the last session. Numbers, durations and counts carry their own date.
+- Paths, counts and names are checked against the project before writing; unchecked details are marked `(unverified)`.
 - One fact per entry. If an entry needs more than ~6 lines, it is two entries.
 - No secrets, no personal data that is not needed for the project.
 
