@@ -77,7 +77,7 @@ Agent önce bir envanter çıkarır ve kullanıcı genelindeki öğeleri dahil e
 python -m unittest discover -s tests -v
 ```
 
-Örnekler tamamen sentetiktir.
+Örnekler tamamen sentetiktir. Yeni bir araç eklemek için: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
@@ -152,7 +152,7 @@ The agent takes an inventory and asks which user-level items to include. It then
 python -m unittest discover -s tests -v
 ```
 
-All examples are synthetic.
+All examples are synthetic. To add a tool, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
