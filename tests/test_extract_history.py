@@ -214,6 +214,11 @@ class Limits(unittest.TestCase):
     def test_home_dir_user_masked(self):
         self.assertEqual(eh.redact(r"C:\Users\alice\proj"), r"C:\Users\<user>\proj")
         self.assertEqual(eh.redact("/home/bob/x and /Users/carol/y"), "/home/<user>/x and /Users/<user>/y")
+        self.assertEqual(eh.redact("`c:/users/dave/p`"), "`c:/users/<user>/p`")
+        self.assertEqual(eh.redact("cd /mnt/c/Users/eve/p; ls /c/Users/eve"), "cd /mnt/c/Users/<user>/p; ls /c/Users/<user>")
+        for keep in ("src/users/models.py", "GET /api/users/42", "https://site.org/home/page",
+                     "app\\users\\views.py"):
+            self.assertEqual(eh.redact(keep), keep)
 
 
 class LongTokensAndNames(unittest.TestCase):

@@ -46,7 +46,11 @@ _BEARER = re.compile(r"(?i)(bearer\s+)[A-Za-z0-9._\-]{12,}")
 _EMAIL = re.compile(r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b")
 
 # The account name in home-directory paths (C:\Users\<name>\..., /home/<name>/..., /Users/<name>/...).
-_HOME_USER = re.compile(r"(?i)((?:\b[A-Za-z]:)?[\\/]+(?:Users|home)[\\/]+)(?!<user>)([^\\/\s\"'`<>|:*?]+)")
+# Only absolute paths: a drive letter (C:, WSL /mnt/c, Git Bash /c), or a slash that starts the path
+# (not src/users/x, /api/users/1 inside a URL, ...).
+_HOME_USER = re.compile(r"((?:\b[A-Za-z]:|(?<![\w.\-/\\:])(?:/mnt)?/[A-Za-z](?=/)|(?<![\w.\-/\\:]))"
+                        r"[\\/]+(?:[Uu]sers|home)[\\/]+)(?!<user>)"
+                        r"([^\\/\s\"'`<>|:*?]+)")
 _NAME_PATTERNS: list = []
 # Git identities that are tools or bots, not people.
 _NOT_PEOPLE = re.compile(r"(?i)\[bot\]|\bbot\b|noreply|^(claude|codex|copilot|gpt|github|github actions|gemini)\b")
