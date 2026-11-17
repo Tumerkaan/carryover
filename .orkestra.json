@@ -1,0 +1,24 @@
+{
+  "ana_dal": "main",
+  "test": {
+    "hizli": [
+      "py -3 -X utf8 -m unittest discover -s tests -f"
+    ],
+    "tam": [
+      "py -3 -X utf8 -m unittest discover -s tests"
+    ]
+  },
+  "uzun": [],
+  "worktree_kopyala": [
+    ".env",
+    "CLAUDE.local.md"
+  ],
+  "paylasilan_dosyalar": [
+    "requirements.txt",
+    "pyproject.toml",
+    "package.json",
+    "package-lock.json"
+  ],
+  "test_zaman_asimi_dk": 45,
+  "paralel_yazan": 3
+}
