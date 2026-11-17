@@ -26,8 +26,9 @@ Work autonomously. Ask the user only at the two points marked **ASK** below.
 ## Steps
 
 ### 1. Identify
-- Source tool, destination tool, project root (absolute path).
-- **Old paths:** ask (or infer from the source tool's session list) whether the project lived at other paths before: renamed or moved folders, other machines, worktrees. Sessions are matched by working directory, so pass every old path to the extractor (`--project` can be repeated). If the user did not say which tool they came from, check which adapters' discovery steps find data for this project.
+- Source tool, destination tool, project root (absolute path). If the user did not say which tool they came from, check which adapters' discovery steps find data for this project.
+- **Old paths:** ask (or infer from the source tool's session list) whether the project lived at other paths before: renamed or moved folders, other machines, worktrees. Sessions are matched by working directory, so pass every old path to the extractor (`--project` can be repeated).
+- **Language:** write the bundle in the language the user writes to you in; keep code, paths and quoted errors as they are.
 - Open `adapters/<source>.md` and `adapters/<destination>.md`. If an adapter is missing, use `adapters/_template.md` and fill it by discovery; mark everything you learn this way as `unverified` in the report.
 
 ### 2. Inventory (read only)
@@ -38,7 +39,7 @@ Using the source adapter, list what exists **for this project** (project-scoped 
 - MCP servers, hooks, permission rules, sandbox/approval mode
 - subagents, custom commands/prompts, skills, plugins
 
-**ASK** (one message): show the inventory in ≤10 lines and ask which global (user-level) items to include. Project-level items are included by default. If the user already said "everything", skip asking.
+**ASK** (one message): show the inventory in ≤10 lines and ask which global (user-level) items to include, and whether they should land at **user level** in the destination (affects every project) or **project level** (only this repo; the safer default). Project-level items are included by default. If the user already said "everything", skip asking and use project level.
 
 ### 3. Distill history
 1. Read source memory/summary files that mention this project.
@@ -65,14 +66,18 @@ Use `references/mapping.md` and the destination adapter. For each inventory row:
 - Partial equivalent (semantics change, behavior preserved as prompt text) → write it, status `Check before using`, note what differs.
 - No equivalent → do not invent one. Status `Not carried`, note why and what the user can do by hand.
 
-Instructions: merge the source instruction file into the destination's instruction file. Rewrite tool-specific references (paths like `.claude/` or `.codex/`, tool names, slash commands) for the destination. Then append a short `## Project history (carried over)` section that **links** to `carryover/decisions.md`, `lessons.md`, `tried-and-dropped.md`, `open-threads.md` and inlines only the 5–10 most important lines. Keep the instruction file short.
+Instructions: the project's instruction file (`AGENTS.md`, `CLAUDE.md`) belongs to the repo, not to the source tool, so you may edit it, but do not delete it. Default route: write the destination's file as a merged copy and rewrite tool-specific references (paths like `.claude/` or `.codex/`, tool names, slash commands, "Codex: ..." / "Claude: ..." lines) for the destination. Use an import line instead (e.g. `@AGENTS.md` in `CLAUDE.md`) only if the user wants one shared file kept for both tools; then move tool-specific lines into the tool's own file. Then append a short `## Project history (carried over)` section that **links** to `carryover/decisions.md`, `lessons.md`, `tried-and-dropped.md`, `open-threads.md` and inlines only the 5–10 most important lines. Keep the instruction file short.
+
+Tool allowlists (e.g. Codex `enabled_tools`) have no direct form in Claude Code: list the server's real tools (start the server, or ask the user), then allow the listed ones and deny the rest by name. If you cannot list them, carry only the allow rules and mark the row `Check before using`.
 
 **ASK** before overwriting an existing destination file that the user wrote by hand (show the diff summary). Creating new files needs no question.
+
+**Blocked writes:** if a hook, permission rule or sandbox refuses a destination write, do not work around it. Write the content to `carryover/<target-file-name>.proposed` (e.g. `carryover/settings.json.proposed`), and report the row as `Check before using` with the note "not written: <reason>; proposed in carryover/...".
 
 ### 6. Verify
 - Parse every config you wrote (JSON / TOML must load).
 - Re-scan the bundle and written files for secrets.
-- If the destination tool can list its MCP servers / skills / agents, run that and confirm they appear.
+- If the destination tool can list its MCP servers / skills / agents (e.g. `claude mcp list`), run that and confirm they appear. Skip this in a test or sandbox where the command would read the real user config, and say it was skipped.
 
 ### 7. Report
 End with exactly one table, then at most three lines of follow-up:
@@ -83,6 +88,8 @@ End with exactly one table, then at most three lines of follow-up:
 | `Carried` | `History` 14 sessions, 2026-03..2026-05 | 9 decisions, 6 lessons, 4 dead ends |
 | `Check before using` | `Hook` PreToolUse lint | Codex only matches shell commands |
 | `Not carried` | `Hook` Notification | No equivalent in destination |
+
+Save the same table as `carryover/report.md`. One row per item; if an item has two caveats (e.g. mapping unverified *and* not written), put both in Notes separated by `;`, and use the stricter status.
 
 Item type is one of: `Instructions`, `History`, `Memory`, `MCP`, `Hook`, `Permission`, `Subagent`, `Command`, `Skill`, `Plugin`, `Setting`.
 

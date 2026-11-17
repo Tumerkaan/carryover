@@ -25,7 +25,7 @@ Status words match the final report: `Carried`, `Check before using`, `Not carri
 | stdio | `command`, `args`, `env` | `command`, `args`, `env`, `env_vars` (names forwarded from parent env) | Carried | Carried; `env_vars = ["X"]` → `"env": {"X": "${X}"}` | L/O |
 | HTTP | `type: "http"`, `url`, `headers` | `url`, `bearer_token_env_var`, `http_headers`, `env_http_headers` | Carried / Check | Carried; `bearer_token_env_var = "T"` → `headers.Authorization: "Bearer ${T}"` | O |
 | SSE | `type: "sse"` | not supported | Not carried | n/a | O |
-| Tool filters | none per server (use permissions `mcp__server__tool`) | `enabled_tools`, `disabled_tools` | n/a | Check: becomes `permissions.deny`/`allow` entries `mcp__<server>__<tool>` | O/U |
+| Tool filters | none per server (use permissions `mcp__server__tool`) | `enabled_tools`, `disabled_tools` | n/a | Check: allowlist → `permissions.allow` for listed tools + `deny` for the server's other tools (needs the real tool list; see SKILL step 5) | O/U |
 | Timeouts, `cwd` | not per server | `startup_timeout_sec`, `tool_timeout_sec`, `cwd` | n/a | Not carried (note it) | O/U |
 
 ## Permissions and sandbox
