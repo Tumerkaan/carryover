@@ -70,7 +70,8 @@ def set_masks(names: Iterable[str]) -> List[str]:
 
 
 def git_authors(paths: Iterable[str]) -> List[str]:
-    """Author and committer names from the project's git history (empty if not a repo)."""
+    """People's names from the project's git repo: author and committer names, plus the account
+    or organization in remote URLs (github.com/<owner>/repo). Empty if not a repo."""
     import subprocess
     names: set = set()
     for p in paths:
@@ -83,7 +84,20 @@ def git_authors(paths: Iterable[str]) -> List[str]:
             continue
         if r.returncode == 0:
             names |= {line.strip() for line in r.stdout.splitlines() if line.strip()}
-    return sorted(names)
+        try:
+            r = subprocess.run(["git", "-C", p, "remote", "-v"], capture_output=True,
+                               text=True, encoding="utf-8", errors="replace", timeout=60)
+        except (OSError, subprocess.SubprocessError):
+            continue
+        if r.returncode == 0:
+            names |= set(_REMOTE_OWNER.findall(r.stdout))
+    # A repo-local git identity is sometimes just the project's name; that is not a person.
+    folders = {os.path.basename(norm_path(p)).lower() for p in paths}
+    return sorted(n for n in names if n.lower() not in folders)
+
+
+# github.com/<owner>/..., git@gitlab.com:<owner>/..., https://user@host/<owner>/...
+_REMOTE_OWNER = re.compile(r"(?:[/@][\w.\-]+\.[a-z]{2,}[:/])([A-Za-z0-9][\w.\-]*)/[^\s/]+(?:\s|$)")
 
 
 def redact(text: str) -> str:
@@ -520,6 +534,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     print(stats, file=sys.stderr)
     print(f"masked names: {len(masked)} (project git authors + --mask)", file=sys.stderr)
     if args.stats:
+        days = sorted({m.timestamp[:10] for m in msgs if m.timestamp})
+        print("last active days: " + " ".join(days[-7:]), file=sys.stderr)
         for sid in sessions:
             ms = [m for m in msgs if m.session == sid]
             first = next((m.text for m in ms if m.role == "user"), "")[:70].replace("\n", " ")

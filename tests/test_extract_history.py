@@ -241,6 +241,26 @@ class LongTokensAndNames(unittest.TestCase):
         self.assertEqual(eh.redact("Ayşe Yılmaz, Yılmaz hoca, JDOE ve Ayşe"), "[NAME], [NAME] hoca, [NAME] ve [NAME]")
         self.assertEqual(eh.redact("Claude yazdı; yılmaz değil"), "Claude yazdı; yılmaz değil")
 
+    def test_remote_owner_pattern(self):
+        out = ("origin\thttps://github.com/acme-org/repo.git (fetch)\n"
+               "up\tgit@gitlab.com:bob/x.git (push)\n")
+        self.assertEqual(eh._REMOTE_OWNER.findall(out), ["acme-org", "bob"])
+
+    def test_git_authors_skip_project_name_and_read_remote(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as d:
+            proj = os.path.join(d, "myproj")
+            os.makedirs(proj)
+            git = lambda *a: subprocess.run(["git", "-C", proj, *a], check=True, capture_output=True)
+            try:
+                git("init", "-q")
+            except (OSError, subprocess.CalledProcessError):
+                self.skipTest("git not available")
+            git("-c", "user.name=myproj", "-c", "user.email=a@b.c", "commit", "-q", "--allow-empty", "-m", "x")
+            git("-c", "user.name=Jane Roe", "-c", "user.email=a@b.c", "commit", "-q", "--allow-empty", "-m", "y")
+            git("remote", "add", "origin", "https://github.com/janeroe99/myproj.git")
+            self.assertEqual(eh.git_authors([proj]), ["Jane Roe", "janeroe99"])
+
     def test_git_authors_of_non_repo_is_empty(self):
         with tempfile.TemporaryDirectory() as d:
             self.assertEqual(eh.git_authors([d, os.path.join(d, "missing")]), [])
