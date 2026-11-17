@@ -32,12 +32,12 @@ The project's data folder is `~/.claude/projects/<encoded>/`, where `<encoded>` 
 ## Transcript format (as read by `extract_history.py`)
 
 One JSON object per line. Relevant fields: `type` (`user` / `assistant` / many others), `cwd`, `timestamp`, `sessionId`, `isSidechain`, `isMeta`, `isCompactSummary`, `message.content` (string, or list of blocks with `type` = `text` / `thinking` / `tool_use` / `tool_result` / `image`).
-Kept: `text` blocks and string content of user/assistant records; compact summaries (marked). Dropped: thinking, tool calls and results, images, sidechain (subagent) and meta records, `<system-reminder>` blocks.
+Kept: `text` blocks and string content of user/assistant records; compact summaries (marked). Dropped: thinking, tool calls and results, images, sidechain (subagent) and meta records, harness messages written into the user role (`<task-notification>`, `<local-command-...>`, `<bash-stdout>`), and injected tags such as `<system-reminder>` (with or without attributes) and `<command-name>`.
 
 ## Writing (when Claude Code is the destination)
 
 - Instructions: if `AGENTS.md` exists and should stay the single source, write `CLAUDE.md` with one line `@AGENTS.md` plus Claude-specific notes. Otherwise merge into `CLAUDE.md`.
-- MCP: prefer `claude mcp add <name> -s project -- <command> <args...>` (writes `.mcp.json`); for HTTP `claude mcp add --transport http <name> <url>`. Env values stay as `${VAR}` references.
+- MCP: prefer `claude mcp add <name> -s project -e KEY=value -- <command> <args...>` (writes `.mcp.json`); for HTTP `claude mcp add --transport http -s project <name> <url>` (flags checked with `claude mcp add --help` on 2.1.318). Env values stay as `${VAR}` references; never put a secret value in `-e`.
 - Permissions: `.claude/settings.json` → `permissions.allow / ask / deny`, rule form `Bash(<prefix>:*)`.
 - Hooks: `.claude/settings.json` → `hooks.<Event>[] = {matcher, hooks: [{type: "command", command}]}`.
 - Subagents: `.claude/agents/<name>.md` with YAML frontmatter `name`, `description`, optional `tools`, `model`; body = system prompt.

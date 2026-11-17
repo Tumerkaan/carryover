@@ -65,7 +65,7 @@ class ClaudeJsonl(unittest.TestCase):
         self.assertIn("ertelemeyi öneririm", self.text)
 
     def test_drops_noise(self):
-        for marker in ("REMINDER", "THINKING", "TOOL_RESULT", "SIDECHAIN", "META_SHOULD"):
+        for marker in ("REMINDER", "THINKING", "TOOL_RESULT", "SIDECHAIN", "META_SHOULD", "TASK_NOTIFICATION"):
             self.assertNotIn(marker, self.text, marker)
 
     def test_compact_summary_kept(self):
@@ -73,6 +73,15 @@ class ClaudeJsonl(unittest.TestCase):
 
     def test_redacts_key(self):
         self.assertNotIn("sk-ant-abcdefghijklmnopqrstuv1234", self.text)
+
+    def test_tag_with_attributes_stripped_text_kept(self):
+        self.assertIn("Kuyruğa öncelik alanı ekle.", self.text)
+
+    def test_old_location_needs_explicit_path(self):
+        self.assertNotIn("Eski klasördeyken", self.text)
+        msgs, text = digest("claude", CLAUDE_HOME, project=[PROJECT, "/old/tilecache"])
+        self.assertIn("Eski klasördeyken", text)
+        self.assertEqual(msgs[0].timestamp[:10], "2026-04-20")
 
     def test_other_project_empty(self):
         msgs, _ = digest("claude", CLAUDE_HOME, project="/work/other")
@@ -141,7 +150,7 @@ class CodexSqlite(unittest.TestCase):
 class Limits(unittest.TestCase):
     def test_max_chars_truncates(self):
         _, text = digest("codex", CODEX_HOME, max_chars=500)
-        self.assertIn("digest truncated", text)
+        self.assertIn("TRUNCATED", text)
 
     def test_per_message_cap(self):
         _, text = digest("codex", CODEX_HOME, per_msg=20)

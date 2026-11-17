@@ -32,7 +32,7 @@ Status words match the final report: `Carried`, `Check before using`, `Not carri
 
 | Concept | Claude Code | Codex | Claude → Codex | Codex → Claude | Src |
 | --- | --- | --- | --- | --- | --- |
-| Shell allow/deny/ask | `settings.json` `permissions.allow/ask/deny`, e.g. `Bash(git push:*)` | `~/.codex/rules/*.rules`, `prefix_rule(pattern=[...], decision="allow"\|"prompt"\|"forbidden")` | Check (no automatic converter, U) | Carried: `allow`→`allow`, `prompt`→`ask`, `forbidden`→`deny`; pattern list joined into `Bash(<words>:*)` | L |
+| Shell allow/deny/ask | `settings.json` `permissions.allow/ask/deny`, e.g. `Bash(git push:*)` | `~/.codex/rules/*.rules`, `prefix_rule(pattern=[...], decision="allow"\|"prompt"\|"forbidden")` | Check (no automatic converter, U) | Carried: `allow`→`allow`, `prompt`→`ask`, `forbidden`→`deny`; pattern list joined into `Bash(<words>:*)` | L (allow) / U (prompt, forbidden) |
 | File read/edit rules | `Read(...)`, `Edit(...)` rules | no path-level rule; sandbox writable roots | Not carried (note) | n/a | L |
 | Approval mode | `permissions.defaultMode` (`default`, `acceptEdits`, `plan`, `bypassPermissions`, ...) | `approval_policy` (`untrusted`, `on-request`, `never`, ...) | Check | Check: `untrusted`/`on-request`→`default`; `never` + `workspace-write`→`acceptEdits` (do not map to `bypassPermissions` without asking) | L/U |
 | Sandbox | `sandbox.enabled` + settings | `sandbox_mode` (`read-only`, `workspace-write`, `danger-full-access`), `writable_roots`, network | Check | Check: report the old mode; Claude Code's sandbox is opt-in | L/U |

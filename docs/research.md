@@ -27,12 +27,12 @@ Existing converters skip what has no equivalent. For the Codex → Claude direct
 
 ## Local findings that change the design
 
-- **Codex history moved to SQLite.** On the checked Codex Desktop install, ~3000 threads were listed in `state_5.sqlite` but only 1 rollout `.jsonl` remained on disk. Messages live in `thread_history_1.sqlite` → `thread_items`. Tools that only read `~/.codex/sessions/*.jsonl` see almost nothing on such installs.
+- **Codex history moved to SQLite.** On the checked Codex Desktop install, almost every thread listed in `state_5.sqlite` had no rollout `.jsonl` left on disk. Messages live in `thread_history_1.sqlite` → `thread_items`. Tools that only read `~/.codex/sessions/*.jsonl` see almost nothing on such installs.
 - **Claude Code deletes transcripts** after `cleanupPeriodDays` (default 30). Leaving Claude Code late means older history is already gone; distilled memory (`~/.claude/projects/<p>/memory/`) survives.
 - **Codex memories are global**, not per project (`~/.codex/memories/`, `rollout_summaries/<date>-<slug>.md`), so they must be filtered by topic.
 - **Injected context is everywhere.** Codex app messages wrap the user's words in `# In app browser:` / `## My request for Codex:` blocks and `<heartbeat>` automation pings. Claude transcripts carry `<system-reminder>` blocks. A digest must strip these or the distillation is mostly noise.
 
 ## Other tools (not yet adapters)
 
-- GLM (Z.ai coding plan) and Kimi models are commonly used **inside** Claude Code via Anthropic-compatible endpoints; CLAUDE.md and MCP keep working, nothing to migrate. [Z.ai docs](https://docs.z.ai/devpack/overview), [hyscaler review](https://hyscaler.com/insights/glm-coding-plan-review) (search summaries)
+- GLM (Z.ai coding plan) is commonly used **inside** Claude Code via an Anthropic-compatible endpoint; CLAUDE.md and MCP keep working, nothing to migrate. Kimi is said to offer the same kind of endpoint (no source checked here). [Z.ai docs](https://docs.z.ai/devpack/overview), [hyscaler review](https://hyscaler.com/insights/glm-coding-plan-review) (search summaries)
 - Qwen Code, Kimi CLI and Gemini CLI are separate tools and need adapters; not verified here.

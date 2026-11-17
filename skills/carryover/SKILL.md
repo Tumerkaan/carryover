@@ -26,7 +26,8 @@ Work autonomously. Ask the user only at the two points marked **ASK** below.
 ## Steps
 
 ### 1. Identify
-- Source tool, destination tool, project root (absolute path). If the user did not say which tool they came from, check which adapters' discovery steps find data for this project.
+- Source tool, destination tool, project root (absolute path).
+- **Old paths:** ask (or infer from the source tool's session list) whether the project lived at other paths before: renamed or moved folders, other machines, worktrees. Sessions are matched by working directory, so pass every old path to the extractor (`--project` can be repeated). If the user did not say which tool they came from, check which adapters' discovery steps find data for this project.
 - Open `adapters/<source>.md` and `adapters/<destination>.md`. If an adapter is missing, use `adapters/_template.md` and fill it by discovery; mark everything you learn this way as `unverified` in the report.
 
 ### 2. Inventory (read only)
@@ -44,9 +45,9 @@ Using the source adapter, list what exists **for this project** (project-scoped 
 2. Run the extractor to get a compact, redacted digest of the conversations:
    ```
    python <this skill's folder>/scripts/extract_history.py --tool <claude|codex> --project "<project root>" --stats
-   python <this skill's folder>/scripts/extract_history.py --tool <claude|codex> --project "<project root>" --out carryover/.digest.md
+   python <this skill's folder>/scripts/extract_history.py --tool <claude|codex> --project "<project root>" [--project "<old path>" ...] --out carryover/.digest.md
    ```
-   `--stats` prints counts only; use it first to see how much history exists. `--home` overrides the source tool's data directory, `--since` / `--until YYYY-MM-DD` limit the range and `--max-chars` (default 200k) caps the output. If the digest says it was truncated, process it in date windows (`--since` + `--until`), distilling each window before reading the next. The digest keeps only user and assistant text plus compaction summaries. Tool output, reasoning, system/developer text, injected app context and subagent threads are dropped. For a tool the script does not support, read the transcripts directly following the adapter's format notes.
+   `--stats` prints counts only; use it first to see how much history exists. `--home` overrides the source tool's data directory, `--since` / `--until YYYY-MM-DD` limit the range and `--max-chars` (default 200k) caps the output. The whole `--stats` date range must be covered before you write `open-threads.md` (it depends on the newest sessions). If the digest ends with `TRUNCATED`, process it in date windows (`--since` + `--until`), distilling each window before reading the next. The digest keeps only user and assistant text plus compaction summaries. Tool output, reasoning, system/developer text, injected app context and subagent threads are dropped. For a tool the script does not support, read the transcripts directly following the adapter's format notes.
 3. Read the digest and write the bundle files (`references/bundle-format.md`):
    - `decisions.md` — what was decided and **why** (one entry per decision, with date and source).
    - `lessons.md` — things that bit you: env quirks, commands that fail, conventions the user corrected.

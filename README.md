@@ -32,7 +32,7 @@ Ayrıntılar için [docs/research.md](docs/research.md).
 
 ### Model değil, araç
 
-GLM, Kimi ya da Qwen modelini Claude Code'un içinde (Anthropic uyumlu bir endpoint üzerinden) kullanıyorsan taşınacak bir şey yok, dosyalar aynı yerde kalır. carryover **aracı** değiştirdiğinde işe yarar: Codex'ten Claude Code'a, Claude Code'dan Codex'e, ileride Qwen Code, Kimi CLI ya da Gemini CLI'a.
+GLM gibi bir modeli Claude Code'un içinde (Anthropic uyumlu bir endpoint üzerinden) kullanıyorsan taşınacak bir şey yok, dosyalar aynı yerde kalır. carryover **aracı** değiştirdiğinde işe yarar: Codex'ten Claude Code'a, Claude Code'dan Codex'e, ileride Qwen Code, Kimi CLI ya da Gemini CLI'a.
 
 ### Desteklenen araçlar
 
@@ -109,7 +109,7 @@ See [docs/research.md](docs/research.md).
 
 ### Tool, not model
 
-Running GLM, Kimi or Qwen *inside* Claude Code (through an Anthropic-compatible endpoint) moves nothing: your files stay where they are. carryover is for switching the **tool**: Codex ⇄ Claude Code now, and later Qwen Code, Kimi CLI or Gemini CLI through adapters.
+Running a model such as GLM *inside* Claude Code (through an Anthropic-compatible endpoint) moves nothing: your files stay where they are. carryover is for switching the **tool**: Codex ⇄ Claude Code now, and later Qwen Code, Kimi CLI or Gemini CLI through adapters.
 
 ### Supported tools
 

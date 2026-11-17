@@ -14,4 +14,4 @@ python skills/carryover/scripts/extract_history.py --tool codex --home examples/
 
 (Git Bash on Windows rewrites `/work/...`; prefix with `MSYS_NO_PATHCONV=1`.)
 
-To try the whole skill, copy `project/` somewhere, open it in Claude Code with the skill installed and say: "I moved this project from Codex, carry it over. Codex data is in <path>/codex-home." Compare with `expected/`.
+To try the whole skill, copy `project/` somewhere, open it in Claude Code with the skill installed and say: "I moved this project from Codex, carry it over. Codex data is in <path>/codex-home; it used to live at /work/tilecache." (The old path matters: sessions are matched by working directory.) Compare with `expected/`.
