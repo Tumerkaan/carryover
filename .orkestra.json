@@ -20,5 +20,6 @@
     "package-lock.json"
   ],
   "test_zaman_asimi_dk": 45,
-  "paralel_yazan": 3
+  "paralel_yazan": 3,
+  "yedek": "kapali"
 }
